@@ -54,7 +54,7 @@ spec:
           hostPath:
             path: /
       initContainers:
-        - image: gcr.io/spectro-common-dev/deepak/nvidia/ubuntu-nvidia-driver-installer:ubuntu99
+        - image: gcr.io/spectro-images-public/gpu/nvidia/ubuntu-nvidia-driver-installer:ubuntu1804
           name: nvidia-driver-installer
           resources:
             requests:
@@ -80,6 +80,3 @@ spec:
       containers:
         - image: "gcr.io/google-containers/pause:2.0"
           name: pause
-      imagePullSecrets:
-        - name: spectro-image-pull-secret
-        - name: spectro-common-dev-image-pull-secret

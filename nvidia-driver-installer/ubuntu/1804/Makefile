@@ -30,15 +30,13 @@ push:
 buildnpush: container push
 
 
-installer: buildnpush
+installer:
 	kubectl label nodes ${WNODE} spectrocloud.com/gpu-accelerator=""
 	kubectl create -f spectro-nvidia-installer.yaml
-	kubectl create -f image-pull.yaml
-	kubectl create -f image-pull-default.yaml
+	kubectl create -f plugin.yaml
 	kubectl create -f spectro-cuda-add.yaml
 
 uninstall:
 	kubectl delete -f spectro-nvidia-installer.yaml
-	kubectl delete -f image-pull.yaml
 	kubectl delete -f spectro-cuda-add.yaml
 	kubectl delete -f plugin.yaml

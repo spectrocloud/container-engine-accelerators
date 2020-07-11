@@ -75,9 +75,24 @@ download_kernel_src() {
 configure_nvidia_installation_dirs() {
   pushd "${NVIDIA_INSTALL_DIR_CONTAINER}"
 
+  # nvidia-installer does not provide an option to configure the
+  # installation path of `nvidia-modprobe` utility and always installs it
+  # under /usr/bin. The following workaround ensures that
+  # `nvidia-modprobe` is accessible outside the installer container
+  # filesystem.
+  mkdir -p bin bin-workdir
+  mount -t overlay -o lowerdir=/usr/bin,upperdir=bin,workdir=bin-workdir none /usr/bin
+
+  mkdir -p xorg xorg-workdir
+  mkdir -p /usr/lib/xorg
+  mount -t overlay -o lowerdir=/usr/lib/xorg,upperdir=xorg,workdir=xorg-workdir none /usr/lib/xorg
+
+
   # Populate ld.so.conf to avoid warning messages in nvidia-installer logs.
   update_container_ld_cache
 
+  # Install an exit handler to cleanup the overlayfs mount points.
+  #trap "{ umount /lib/modules/${KERNEL_VERSION}/video; umount /usr/lib/x86_64-linux-gnu ; umount /usr/bin; }" EXIT
   popd
   echo "Configuring installation directories... DONE."
 }
@@ -95,7 +110,10 @@ run_nvidia_installer() {
   pushd "${NVIDIA_INSTALL_DIR_CONTAINER}"
   sh "${NVIDIA_INSTALLER_RUNFILE}" \
     --utility-prefix="${NVIDIA_INSTALL_DIR_CONTAINER}" \
+    --utility-libdir=lib64 \
     --opengl-prefix="${NVIDIA_INSTALL_DIR_CONTAINER}" \
+    --opengl-libdir=lib64 \
+    --kernel-install-path="/lib/modules/${KERNEL_VERSION}/video" \
     --no-install-compat32-libs \
     --log-file-name="${NVIDIA_INSTALL_DIR_CONTAINER}/nvidia-installer.log" \
     --no-drm \
